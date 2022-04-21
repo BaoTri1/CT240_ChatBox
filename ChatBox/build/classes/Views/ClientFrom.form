@@ -163,6 +163,9 @@
                 </Property>
                 <Property name="opaque" type="boolean" value="true"/>
               </Properties>
+              <Events>
+                <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="lbl_AddMouseClicked"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JLabel" name="lbl_Logout">
               <Properties>
@@ -807,6 +810,9 @@
                       <Image iconType="3" name="/Image/icons8-link-32.png"/>
                     </Property>
                   </Properties>
+                  <Events>
+                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="lbl_ChonFileMouseClicked"/>
+                  </Events>
                 </Component>
                 <Component class="javax.swing.JButton" name="btnSend">
                   <Properties>

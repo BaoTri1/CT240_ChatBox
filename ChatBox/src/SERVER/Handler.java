@@ -65,7 +65,6 @@ public class Handler implements Runnable {
         while(true) {
             
             try {
-                
                 String request = null;
                 
                 //Doc yeu caiu tu user
@@ -76,10 +75,7 @@ public class Handler implements Runnable {
                     //Thong bao user da dang xuat
                     out.writeUTF("da dang xuat");
                     out.flush();
-                    
-                    //Dong socket lai
-                    socket.close();
-                    
+  
                     //Chuyen trang thai offline va xoa khoi clients
                     this.online  = false;
                     for(Handler client: Server.clients){
@@ -88,7 +84,7 @@ public class Handler implements Runnable {
                         break;
                     }
                     
-                    //Update Friend
+                    socket.close();
                     
                 }
                 
@@ -133,6 +129,7 @@ public class Handler implements Runnable {
                                     client.getOut().writeUTF("Emojis");
                                     client.getOut().writeUTF(this.avatar);
                                     client.getOut().writeUTF(content);
+                                    client.getOut().writeUTF(this.name);
                                     client.getOut().flush();
                                     break;
                                 }
@@ -143,18 +140,31 @@ public class Handler implements Runnable {
                     //Tin nhan dang file
                     else if(message.equals("File")){
                         
-                        //Nhan ten Friend va tin nhan
-                        String nameFriend = in.readUTF();
-                        String content = in.readUTF();
-                        
-                        for(Handler client: Server.clients){
-                            if(client.getName().equals(nameFriend)){
-                                synchronized(lock){
-                                    
+                        // Đọc các header của tin nhắn gửi file
+                            String receiver = in.readUTF();
+                            String filename = in.readUTF();
+                            int size = Integer.parseInt(in.readUTF());
+                            int bufferSize = 2048;
+                            byte[] buffer = new byte[bufferSize];
+					
+                            for (Handler client: Server.clients) {
+				if (client.getName().equals(receiver)) {
+                                    synchronized (lock) {
+					client.getOut().writeUTF("File");
+					client.getOut().writeUTF(this.avatar);
+					client.getOut().writeUTF(filename);
+					client.getOut().writeUTF(String.valueOf(size));
+					while (size > 0) {
+					// Gửi lần lượt từng buffer cho người nhận cho đến khi hết file
+					in.read(buffer, 0, Math.min(size, bufferSize));
+					client.getOut().write(buffer, 0, Math.min(size, bufferSize));
+					size -= bufferSize;
+                                    }
+                                    client.getOut().flush();
                                     break;
-                                }
+				}
                             }
-                        }                         
+			}                        
                     }
                 }
                 else if(request.equals("ChatWithGroup")){
@@ -166,41 +176,55 @@ public class Handler implements Runnable {
                     //Tin nhan dang van ban
                     if(message.equals("Text")){
                         
-                        //Nhan ten Friend va tin nhan
-                        String nameFriend = in.readUTF();
+                        
+                        int sl = in.readInt();
+                        String[] users = new String[sl];
+                        for(int i = 0; i < sl; i++){
+                            users[i] = in.readUTF();
+                        }
                         String content = in.readUTF();
                         
-                        for(Handler client: Server.clients){
-                            if(client.getName().equals(nameFriend)){
-                                synchronized(lock){
-                                    client.getOut().writeUTF("Text");
-                                    client.getOut().writeUTF(this.avatar);
-                                    client.getOut().writeUTF(content);
-                                    client.getOut().flush();
-                                    break;
+                        for(String user: users){
+                            for(Handler client: Server.clients){
+                                if(client.getName().equals(user)){
+                                    synchronized(lock){
+                                        client.getOut().writeUTF("Text");
+                                        client.getOut().writeUTF(this.avatar);
+                                        client.getOut().writeUTF(content);
+                                        client.getOut().writeUTF("Send ALL My Friend");
+                                        client.getOut().flush();
+                                        break;
+                                    }
                                 }
                             }
-                        }   
+                        }
                     }
                     
                     //Tin nhan dang emojis
                     else if(message.equals("Emojis")){
                         
-                        //Nhan ten Friend va tin nhan
-                        String nameFriend = in.readUTF();
-                        String content = in.readUTF();
                         
-                        for(Handler client: Server.clients){
-                            if(client.getName().equals(nameFriend)){
-                                synchronized(lock){
-                                    client.getOut().writeUTF("Emojis");
-                                    client.getOut().writeUTF(this.avatar);
-                                    client.getOut().writeUTF(content);
-                                    client.getOut().flush();
-                                    break;
+                        int sl = in.readInt();
+                        String[] users = new String[sl];
+                        for(int i = 0; i < sl; i++){
+                            users[i] = in.readUTF();
+                        }
+                        String content = in.readUTF();
+
+                        for(String user: users){
+                            for(Handler client: Server.clients){
+                                if(client.getName().equals(user)){
+                                    synchronized(lock){
+                                        client.getOut().writeUTF("Emojis");
+                                        client.getOut().writeUTF(this.avatar);
+                                        client.getOut().writeUTF(content);
+                                        client.getOut().writeUTF("Send ALL My Friend");
+                                        client.getOut().flush();
+                                        break;
+                                    }
                                 }
                             }
-                        }                         
+                        }
                     }
                     
                     //Tin nhan dang file

@@ -10,8 +10,10 @@ import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -21,7 +23,9 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 
 /**
  *
@@ -31,7 +35,7 @@ public class ClientFrom extends javax.swing.JFrame {
 
 
     private HashMap<String, String> friends;
-    private HashMap<String, JPanel> panelchat;
+    private int numFri = 0;
     private int mauser;
     private String nameuser;
     private String gioitinh;
@@ -39,8 +43,7 @@ public class ClientFrom extends javax.swing.JFrame {
     private String avatar;
     private DataOutputStream out;
     private DataInputStream in;
-    private String avatar_Friend;
-    private String name_Friend;
+    private String yeucau;
     private MySQLServer database;
     
     Thread receiver;
@@ -55,12 +58,10 @@ public class ClientFrom extends javax.swing.JFrame {
         this.ngaysinh = ngaysinh;
         this.avatar = avatar;
         database = new MySQLServer();
-        panelchat = new HashMap<String, JPanel>();
         
         initComponents(); 
         SetUp();
         lblName.setText("ChatBox Xin Chào Bạn !!!");
-        setFoucus(lbl_Chat);
         receiver = new Thread(new Receiver(in));
         receiver.start();
 
@@ -172,6 +173,11 @@ public class ClientFrom extends javax.swing.JFrame {
         lbl_Add.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lbl_Add.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/icons8-add-user-group-man-man-50.png"))); // NOI18N
         lbl_Add.setOpaque(true);
+        lbl_Add.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lbl_AddMouseClicked(evt);
+            }
+        });
 
         lbl_Logout.setBackground(new java.awt.Color(153, 255, 255));
         lbl_Logout.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -595,6 +601,11 @@ public class ClientFrom extends javax.swing.JFrame {
 
         lbl_ChonFile.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lbl_ChonFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/icons8-link-32.png"))); // NOI18N
+        lbl_ChonFile.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lbl_ChonFileMouseClicked(evt);
+            }
+        });
 
         btnSend.setBackground(new java.awt.Color(255, 255, 255));
         btnSend.setFont(new java.awt.Font("Times New Roman", 0, 18)); // NOI18N
@@ -814,21 +825,30 @@ public class ClientFrom extends javax.swing.JFrame {
     
     //Xử lý sự kiện chatFirend
     private void lbl_ChatMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbl_ChatMouseClicked
-        // TODO add your handling code here:
-        
-        
+        yeucau = "ChatWithFriend";
+        setFoucus(lbl_Chat);
+        resetFoucus(lbl_Group, lbl_Add, lbl_Logout);
     }//GEN-LAST:event_lbl_ChatMouseClicked
 
     //Xử lý sự liện nút gữi
     private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
         // Gui tin nhan di
         try{
-            
-            out.writeUTF("ChatWithFriend");
-            out.writeUTF("Text");
-            out.writeUTF(lblName.getText());
-            out.writeUTF(txtMessage.getText());
-            out.flush();
+            if(yeucau.equals("ChatWithGroup")){
+                out.writeUTF(yeucau);
+                out.writeUTF("Text");
+                out.writeInt(numFri);
+                for(String nameF: friends.keySet())
+                    out.writeUTF(nameF);
+                out.writeUTF(txtMessage.getText());
+                out.flush();
+            }else if(yeucau.equals("ChatWithFriend")){
+                out.writeUTF(yeucau);
+                out.writeUTF("Text");
+                out.writeUTF(lblName.getText());
+                out.writeUTF(txtMessage.getText());
+                out.flush();
+            }
             
         }
         catch(Exception e){
@@ -860,187 +880,327 @@ public class ClientFrom extends javax.swing.JFrame {
 
     //Xử lý sự kiện chatGroup
     private void lbl_GroupMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbl_GroupMouseClicked
-        
+        yeucau = "ChatWithGroup";
         setFoucus(lbl_Group);
         resetFoucus(lbl_Chat, lbl_Add, lbl_Logout);
-        
+         
     }//GEN-LAST:event_lbl_GroupMouseClicked
 
     //Các xử lý cho việc hiển thị lên khung chat và gữi đi
     private void Label1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label1MouseClicked
 
         Add_EmojisToPanelChatforUser(Label1.getIcon().toString());
-        
+        try {
+            sendEmojis(Label1.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label1MouseClicked
 
     private void Label2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label2MouseClicked
         
         Add_EmojisToPanelChatforUser(Label2.getIcon().toString());
-
+        try {
+            sendEmojis(Label2.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label2MouseClicked
 
     private void Label3MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label3MouseClicked
         
         Add_EmojisToPanelChatforUser(Label3.getIcon().toString());
-  
+        try {
+            sendEmojis(Label3.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label3MouseClicked
 
     private void Label4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label4MouseClicked
         
         Add_EmojisToPanelChatforUser(Label4.getIcon().toString());
-           
+        try {
+            sendEmojis(Label4.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }   
     }//GEN-LAST:event_Label4MouseClicked
 
     private void Label5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label5MouseClicked
         
         Add_EmojisToPanelChatforUser(Label5.getIcon().toString());
-        
+        try {
+            sendEmojis(Label5.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label5MouseClicked
 
     private void Label6MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label6MouseClicked
         
         Add_EmojisToPanelChatforUser(Label6.getIcon().toString());
-        
+        try {
+            sendEmojis(Label6.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label6MouseClicked
 
     private void Label7MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label7MouseClicked
         
         Add_EmojisToPanelChatforUser(Label7.getIcon().toString());
-        
+        try {
+            sendEmojis(Label7.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label7MouseClicked
 
     private void Label8MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label8MouseClicked
         
         Add_EmojisToPanelChatforUser(Label8.getIcon().toString());
-        
+        try {
+            sendEmojis(Label8.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label8MouseClicked
 
     private void Label9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label9MouseClicked
         
         Add_EmojisToPanelChatforUser(Label9.getIcon().toString());
-        
+        try {
+            sendEmojis(Label9.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label9MouseClicked
 
     private void Label10MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label10MouseClicked
         
         Add_EmojisToPanelChatforUser(Label10.getIcon().toString());
-        
+        try {
+            sendEmojis(Label10.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label10MouseClicked
 
     private void Label11MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label11MouseClicked
         
         Add_EmojisToPanelChatforUser(Label11.getIcon().toString());
-        
+        try {
+            sendEmojis(Label11.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label11MouseClicked
 
     private void Label12MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label12MouseClicked
         
         Add_EmojisToPanelChatforUser(Label12.getIcon().toString());
-        
+        try {
+            sendEmojis(Label12.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label12MouseClicked
 
     private void Label13MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label13MouseClicked
         
         Add_EmojisToPanelChatforUser(Label13.getIcon().toString());
-        
+        try {
+            sendEmojis(Label13.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label13MouseClicked
 
     private void Label14MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label14MouseClicked
         
         Add_EmojisToPanelChatforUser(Label14.getIcon().toString());
-        
+        try {
+            sendEmojis(Label14.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label14MouseClicked
 
     private void Label15MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label15MouseClicked
         
         Add_EmojisToPanelChatforUser(Label15.getIcon().toString());
-        
+        try {
+            sendEmojis(Label15.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label15MouseClicked
 
     private void Label16MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label16MouseClicked
         
         Add_EmojisToPanelChatforUser(Label16.getIcon().toString());
-        
+        try {
+            sendEmojis(Label16.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label16MouseClicked
 
     private void Label17MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label17MouseClicked
         
         Add_EmojisToPanelChatforUser(Label17.getIcon().toString());
-        
+        try {
+            sendEmojis(Label17.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label17MouseClicked
 
     private void Label18MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label18MouseClicked
         
         Add_EmojisToPanelChatforUser(Label18.getIcon().toString());
-        
+        try {
+            sendEmojis(Label18.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label18MouseClicked
 
     private void Label19MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label19MouseClicked
         
         Add_EmojisToPanelChatforUser(Label19.getIcon().toString());
-        
+        try {
+            sendEmojis(Label19.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label19MouseClicked
 
     private void Label20MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label20MouseClicked
         
         Add_EmojisToPanelChatforUser(Label20.getIcon().toString());
-        
+        try {
+            sendEmojis(Label20.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label20MouseClicked
 
     private void Label21MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label21MouseClicked
         
         Add_EmojisToPanelChatforUser(Label21.getIcon().toString());
-        
+        try {
+            sendEmojis(Label21.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label21MouseClicked
 
     private void Label22MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label22MouseClicked
         
         Add_EmojisToPanelChatforUser(Label22.getIcon().toString());
-        
+        try {
+            sendEmojis(Label22.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label22MouseClicked
 
     private void Label23MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label23MouseClicked
 
         Add_EmojisToPanelChatforUser(Label23.getIcon().toString());
-        
+        try {
+            sendEmojis(Label23.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label23MouseClicked
 
     private void Label24MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label24MouseClicked
         
         Add_EmojisToPanelChatforUser(Label24.getIcon().toString());
-        
+        try {
+            sendEmojis(Label24.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label24MouseClicked
 
     private void Label25MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label25MouseClicked
         
         Add_EmojisToPanelChatforUser(Label25.getIcon().toString());
-        
+        try {
+            sendEmojis(Label25.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label25MouseClicked
 
     private void Label26MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label26MouseClicked
         
         Add_EmojisToPanelChatforUser(Label26.getIcon().toString());
-        
+        try {
+            sendEmojis(Label26.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label26MouseClicked
 
     private void Label27MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label27MouseClicked
         
         Add_EmojisToPanelChatforUser(Label27.getIcon().toString());
-        
+        try {
+            sendEmojis(Label27.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }//GEN-LAST:event_Label27MouseClicked
 
     private void Label28MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label28MouseClicked
         
         Add_EmojisToPanelChatforUser(Label28.getIcon().toString());
-        
+        try {
+            sendEmojis(Label28.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label28MouseClicked
 
     private void Label29MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Label29MouseClicked
         
         Add_EmojisToPanelChatforUser(Label29.getIcon().toString());
-        
+        try {
+            sendEmojis(Label29.getIcon().toString());
+        } catch (IOException ex) {
+            Logger.getLogger(ClientFrom.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_Label29MouseClicked
 
+    public final void sendEmojis(String s) throws IOException{
+            if(yeucau.equals("ChatWithGroup")){
+                out.writeUTF(yeucau);
+                out.writeUTF("Emojis");
+                out.writeInt(numFri);
+                for(String nameF: friends.keySet())
+                    out.writeUTF(nameF);
+                out.writeUTF(s);
+                out.flush();
+            }else if(yeucau.equals("ChatWithFriend")){
+                out.writeUTF(yeucau);
+                out.writeUTF("Emojis");
+                out.writeUTF(lblName.getText());
+                out.writeUTF(s);
+                out.flush();
+            }        
+//        out.writeUTF(yeucau);
+//        out.writeUTF("Emojis");
+//        out.writeUTF(lblName.getText());
+//        out.writeUTF(s);
+//        out.flush();
+        
+    }
+    
     private void lblAvatar_UserMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblAvatar_UserMouseClicked
         
          java.awt.EventQueue.invokeLater(new Runnable() {
@@ -1055,6 +1215,9 @@ public class ClientFrom extends javax.swing.JFrame {
 
     //Xử lý sự kiện Logout
     private void lbl_LogoutMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbl_LogoutMouseClicked
+        setFoucus(lbl_Logout);
+        resetFoucus(lbl_Chat, lbl_Group, lbl_Add);
+        
         try{
            out.writeUTF("Log out");
            out.flush();
@@ -1101,26 +1264,88 @@ public class ClientFrom extends javax.swing.JFrame {
                     Panel_ListFriend.validate();
                     System.out.println(rs1.getString(1));
                     System.out.println(rs1.getString(2));
+                    numFri++;
                 }
             }
         }catch(Exception e){
             e.printStackTrace();
         }
-        
-        for(String name1: friends.keySet()){
-            JPanel p = new JPanel();
-            panelchat.put(name1, p);
-        }
-        
-        btnDSBan.setEnabled(false);
+        if(numFri > 0)
+            btnDSBan.setEnabled(false);
     }//GEN-LAST:event_btnDSBanActionPerformed
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
 
         String nameFriend = txtSearch.getText();
         SetUp_PanelFriend(nameFriend, friends.get(nameFriend));
+        PanelChat.removeAll();
+        PanelChat.validate();
         
     }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void lbl_AddMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbl_AddMouseClicked
+        setFoucus(lbl_Add);
+        resetFoucus(lbl_Chat, lbl_Group, lbl_Logout);
+        java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    AddFriendFrom add = new AddFriendFrom(mauser);
+                    add.setVisible(true);
+                    add.setLocationRelativeTo(null);
+                }
+            });
+        
+    }//GEN-LAST:event_lbl_AddMouseClicked
+
+    private void lbl_ChonFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lbl_ChonFileMouseClicked
+        // Hiển thị hộp thoại cho người dùng chọn file để gửi
+        JFileChooser fileChooser = new JFileChooser();
+        int rVal = fileChooser.showOpenDialog(this);
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            byte[] selectedFile = new byte[(int) fileChooser.getSelectedFile().length()];
+            BufferedInputStream bis;
+            try {
+		bis = new BufferedInputStream(new FileInputStream(fileChooser.getSelectedFile()));
+		// Đọc file vào biến selectedFile
+		bis.read(selectedFile, 0, selectedFile.length);
+						
+		out.writeUTF("File");
+		out.writeUTF(lblName.getText());
+		out.writeUTF(fileChooser.getSelectedFile().getName());
+		out.writeUTF(String.valueOf(selectedFile.length));
+						
+		int size = selectedFile.length;
+		int bufferSize = 2048;
+		int offset = 0;
+						
+		// Lần lượt gửi cho server từng buffer cho đến khi hết file
+		while (size > 0) {
+                    out.write(selectedFile, offset, Math.min(size, bufferSize));
+                    offset += Math.min(size, bufferSize);
+                    size -= bufferSize;
+		} 
+						
+		out.flush();
+						
+		bis.close();
+						
+		// In ra màn hình file
+		JPanel panel = Panel_Message();
+                setLayOut_RIGHT(panel);
+                JLabel mess = Message(fileChooser.getSelectedFile().getName());
+                JLabel avatar = Avatar_User();
+                mess.setVisible(true);
+                avatar.setVisible(true);
+                panel.setVisible(true);
+
+                panel.add(mess);
+                panel.add(avatar);
+       
+                DisplayMessage(panel);
+            } catch (IOException e1) {
+		e1.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_lbl_ChonFileMouseClicked
     
     //Hiển thị Emojis lên khung chat từ phía Friend
     private void Add_EmojisToPanelChatforFriend(String path, String avatarFriend) {
@@ -1137,8 +1362,8 @@ public class ClientFrom extends javax.swing.JFrame {
         panel.add(avatar);
         panel.add(emojis);
         
-  //      PanelChat.add(panel);
-  //      PanelChat.validate();
+        PanelChat.add(panel);
+        PanelChat.validate();
         ScrollPane_Chat.validate();
         
         autoScroll();
@@ -1159,8 +1384,8 @@ public class ClientFrom extends javax.swing.JFrame {
         panel.add(emojis);
         panel.add(avatar);
         
- //       PanelChat.add(panel);
-//        PanelChat.validate();
+        PanelChat.add(panel);
+        PanelChat.validate();
         ScrollPane_Chat.validate();
         
         autoScroll();
@@ -1329,18 +1554,15 @@ public class ClientFrom extends javax.swing.JFrame {
                         //Nhận tin nhắn Emojis
                         String pathAvatar = in.readUTF();
                         String emojis = in.readUTF();
+                        String nameFriend = in.readUTF();
                         
-                        
+                        SetUp_PanelFriend(nameFriend, pathAvatar);
                         //Hiển thị emojis lên khung chat
                         Add_EmojisToPanelChatforFriend(emojis, pathAvatar);
                         
                     }
                     else if(styleMess.equals("File")){
                         
-                    }
-                    
-                    else if(styleMess.equals("offline")){
-                        JOptionPane.showMessageDialog(null, "Bạn của bạn đang offline. Hãy liên lạc lại sau nhé.", "Thông Báo", JOptionPane.WARNING_MESSAGE);
                     }
                     
                     else if(styleMess.equals("da dang xuat")){

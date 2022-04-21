@@ -94,6 +94,11 @@ public class LoginFrom extends javax.swing.JFrame {
         lblPwd.setText("Mật Khẩu:");
 
         txtPwd.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        txtPwd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtPwdActionPerformed(evt);
+            }
+        });
 
         btnDangNhap.setBackground(new java.awt.Color(255, 255, 255));
         btnDangNhap.setFont(new java.awt.Font("Times New Roman", 1, 18)); // NOI18N
@@ -291,6 +296,10 @@ public class LoginFrom extends javax.swing.JFrame {
         }
         
     }//GEN-LAST:event_btnDangNhapActionPerformed
+
+    private void txtPwdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPwdActionPerformed
+        btnDangNhapActionPerformed(evt);
+    }//GEN-LAST:event_txtPwdActionPerformed
 
     /**
      * @param args the command line arguments
