@@ -105,18 +105,19 @@ public class Handler implements Runnable {
                         //Nhan ten Friend va tin nhan
                         String nameFriend = in.readUTF();
                         String content = in.readUTF();
-                        
+                                               
                         for(Handler client: Server.clients){
                             if(client.getName().equals(nameFriend)){
                                 synchronized(lock){
                                     client.getOut().writeUTF("Text");
                                     client.getOut().writeUTF(this.avatar);
                                     client.getOut().writeUTF(content);
+                                    client.getOut().writeUTF(this.name);
                                     client.getOut().flush();
                                     break;
                                 }
                             }
-                        }   
+                        }
                     }
                     
                     //Tin nhan dang emojis
@@ -219,13 +220,21 @@ public class Handler implements Runnable {
                         }                         
                     }
                 }
-                
+                  
             }catch(Exception e){
                 e.printStackTrace();
             }
             
         }
         
+    }
+    
+    public int checkOnline(String nameFriend) {
+        for(Handler client: Server.clients){
+            if(client.equals(nameFriend))
+                return 1;
+        }
+        return 0;
     }
     
 }

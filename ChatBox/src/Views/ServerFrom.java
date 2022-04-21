@@ -122,7 +122,7 @@ public class ServerFrom extends javax.swing.JFrame {
            @Override
            public void run() {
                try {
-                   Server server = new Server();
+                   new Server();
                }
                catch(Exception e){
                    e.printStackTrace();

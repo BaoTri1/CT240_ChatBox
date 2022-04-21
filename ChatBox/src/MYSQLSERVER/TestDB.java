@@ -19,11 +19,17 @@ public class TestDB {
         
         db.Connection();
         
-        String executeStr = "Select * from Users where MaUser = " + "1" + ";";
-        ResultSet rs = db.executeQuery(executeStr);
-        while(rs.next()){
-            System.out.println(rs.getString(1));
-        }
+        
+            String executeStr = "Select MaUserFriend from Friend where MaUser = " + 2 + ";";
+            ResultSet rs = db.executeQuery(executeStr);
+            while(rs.next()){
+                String executeStr1 = "Select NameUser, Avatar from Users where MaUser = " + rs.getInt(1) + ";";
+                ResultSet rs1 = db.executeQuery(executeStr1);
+                while(rs1.next()) {
+                    System.out.println(rs1.getString(1));
+                    System.out.println(rs1.getString(2));
+                }
+            }
         
         db.Close();
         

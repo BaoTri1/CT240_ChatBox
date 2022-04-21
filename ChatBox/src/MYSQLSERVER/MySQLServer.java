@@ -34,6 +34,11 @@ public class MySQLServer {
         return rs;
     }
     
+    public void executeNonQuery(String executeStr) throws SQLException{
+        s = conn.createStatement();
+        s.execute(executeStr);
+    }
+    
     public void Close() throws SQLException{
         
         conn.close();

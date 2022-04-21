@@ -34,15 +34,10 @@ public class Account {
         
         try{
 
-//            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
- //           String dbUrl = "jdbc:sqlserver://MSI\\\\SQLEXPRESS:1433;databaseName=ChatBox;user=sa;password=123456";
- //           Connection conn = DriverManager.getConnection(dbUrl);
             database.Connection();
         
             String executeStr = "Select * from Account;";
-//            Statement s = conn.createStatement();
             ResultSet rs = database.executeQuery(executeStr);
- //           ResultSet rs = s.executeQuery(executeStr);
             while(rs.next()){
                 if(rs.getString("UserName").equals(username)){
                     database.Close();
@@ -87,14 +82,14 @@ public class Account {
             String executeStr1 = "Select count(MaUser) from Account;";
             ResultSet rs = database.executeQuery(executeStr1);
             while(rs.next()){
-                mauser = rs.getInt("MaUser");     
+                mauser = rs.getInt(1);     
             }
 
             mauser++;
 
             String executeStr2 = "Insert into Account values (" + mauser
                     + ", '" + username + "', '" + password + "');";
-            database.executeQuery(executeStr2);
+            database.executeNonQuery(executeStr2);
 
             database.Close();
             
@@ -113,7 +108,7 @@ public class Account {
         try {
             database.Connection();
             
-            String executeStr = "Select MaUser from Account;";
+            String executeStr = "Select MaUser from Account where UserName = '" + username + "';" ;
             ResultSet rs = database.executeQuery(executeStr);
             while(rs.next()) {
                 mauser = rs.getInt("MaUser");

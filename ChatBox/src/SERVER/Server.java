@@ -25,28 +25,28 @@ public class Server {
     private Socket socket;
     public static ArrayList<Handler> clients;
     private Account account;
-    private User user;
     private MySQLServer database;
     
     public Server() throws IOException, ClassNotFoundException, SQLException{
         
-        //Tao lock dung de synchronize 
-        lock = new Object();
+        try {
+            //Tao lock dung de synchronize 
+            lock = new Object();
+
+            clients = new ArrayList();
+
+            //Tao ServerSocket voi cong 9999
+            server = new ServerSocket(9999);
+
+            database = new MySQLServer();
         
-        clients = new ArrayList();
-        
-        //Tao ServerSocket voi cong 9999
-        server = new ServerSocket(9999);
-        
-        database = new MySQLServer();
-        
-        while(true) {
-            
-            try {
-            
-                //Doi socket yeu cau tu phia client
-                socket = server.accept();
+            while(true) {
                 
+                System.out.println("Bắt đầu");
+                
+                //Doi socket yeu cau tu phia client
+                socket = server.accept();                
+
                 System.out.println("Kết nối thành công");
 
                 //Tao DataOutputStream de gui yeu cau di tu server
@@ -72,29 +72,9 @@ public class Server {
                         out.flush();
                     }
                     else{
-                        String name = in.readUTF();
-                        String gioitinh = in.readUTF();
-                        String ngaysinh = in.readUTF();
-                        String avatar = in.readUTF();
-
-                        //Tao Handler  moi de xu ly cac yeu cau tu lienct nay
-                        Handler newHandler = new Handler(socket, name, avatar, true, lock);
-                        clients.add(newHandler);
 
                         //Luu Accout cua clients nay
                         account.SaveAccount();
-
-                        //Luu thong tin cua user
-                        Boolean GT;
-                        if(gioitinh.equals("Nam"))
-                            GT = true;
-                        else GT = false;
-                        user = new User(name, GT, ngaysinh, avatar);
-                        user.SaveUser();
-
-                        //Tao mot Thread de giao tiep voi user nay
-                        Thread t = new Thread(newHandler);
-                        t.start();
 
                         //Thong bao xuong Clients
                         out.writeUTF("signup thanh cong");
@@ -158,13 +138,14 @@ public class Server {
                                     out.writeUTF(rs.getString("NgaySinh"));
                                     out.flush();
                                     out.writeUTF(rs.getString("Avatar"));
-                                    out.flush();                                   
+                                    out.flush();   
+                                    
+                                    
                                     
                                     //Tao Thread de giao tiep voi user nay
                                     Thread t = new Thread(newHandler);
                                     t.start();
                                     
-                                    //Update Friend
                                     
                                 }
                                 else{
@@ -173,22 +154,26 @@ public class Server {
                                 }
                             }
                         }
-                        
+                       
                     }
                     else{
                         out.writeUTF("login that bai");
                         out.flush();
                     }
                 }
-            }catch(Exception e) {
-                e.printStackTrace();
+                
+                
+                System.out.println("Hết Vòng Lặp");
             }
-            finally{
-                if(server != null)
-                    server.close();
-            }           
-        }        
-    }
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally{       
+            if(server != null){
+                server.close();
+            }
+        }           
+    }        
     
     public Boolean CheckOnl(String name) {
         try {
@@ -200,16 +185,8 @@ public class Server {
             return false; 
         }
         return false; 
-    }
+    }    
     public void UpdateFriendOnl() {
-        
-    }
-    
-    
-    public static void main(String [] args) throws IOException, ClassNotFoundException, SQLException {
-        
-        Server server1 = new Server();
-        
-    }
-    
+
+    }  
 }
