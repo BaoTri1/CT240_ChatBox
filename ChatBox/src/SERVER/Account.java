@@ -87,10 +87,12 @@ public class Account {
 
             mauser++;
 
-            String executeStr2 = "Insert into Account values (" + mauser
+            String executeStr2 = "Insert into Users values (" + mauser
+                    + ", '', "  + 0 + ", '', '" + "');";
+            String executeStr3 = "Insert into Account values (" + mauser
                     + ", '" + username + "', '" + password + "');";
             database.executeNonQuery(executeStr2);
-
+            database.executeNonQuery(executeStr3);
             database.Close();
             
         }catch(Exception e) {

@@ -16,16 +16,13 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
 /**
  *
@@ -1280,6 +1277,7 @@ public class ClientFrom extends javax.swing.JFrame {
         SetUp_PanelFriend(nameFriend, friends.get(nameFriend));
         PanelChat.removeAll();
         PanelChat.validate();
+        ScrollPane_Chat.validate();
         
     }//GEN-LAST:event_btnSearchActionPerformed
 

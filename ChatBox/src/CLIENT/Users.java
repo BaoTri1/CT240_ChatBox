@@ -77,11 +77,8 @@ public class Users {
                 mauser = rs1.getInt(1);
             }
             
-            mauser++;
-            
-            String executeStr2 = "Insert into Users values (" + mauser +
-                            ", '" + name + "', " + gioitinh + ", '" +
-                    ngaysinh + "', '" + avatar + "');";
+            String executeStr2 = "Update Users set NameUser = '" + name + "', GioiTinh = " 
+                    + gioitinh + ", NgaySinh = '" + ngaysinh + "', Avatar = '" + avatar + "' where MaUser = " + mauser;
             database.executeNonQuery(executeStr2);
             
         }catch(Exception e) {
@@ -104,7 +101,7 @@ public class Users {
                             " = " + giatriupdate + " where MaUser = " + vitri + ";";
             }else{
                 executeStr = "Update Users set " + trupdate +
-                            " = " + giatri + " where MaUser = " + vitri + ";";
+                            " = '" + giatri + "' where MaUser = " + vitri + ";";
             }
             
             
